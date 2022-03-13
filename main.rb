@@ -73,7 +73,7 @@ module Play
 
   def exact?(guess,code)
     if guess.eql?(code)
-      puts "The secret code has been guess!"
+      puts "The secret code has been guessed!"
       return true
     else 
       return false
@@ -87,7 +87,7 @@ module Play
   end
 
   def game_loop_hum()
-    loop do
+    for i in 1..12 do
       puts "Type in 4 numbers (1-6) as your guess."
       Codebreaker.guess(gets.chomp)
       if @@last_guess.any? {|n| n.to_i < 1 || n.to_i > 9 || /\D/.match?(n)}
@@ -194,7 +194,7 @@ $code_maker = Codemaker.new()
 
 
 Codemaker.create_code(Computer.rand_code())
-puts Play.secret_code()
 Play.game_loop_hum
+puts "The secret code was " + Play.secret_code().join("") + "!"
 
 
