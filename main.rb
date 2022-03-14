@@ -1,3 +1,5 @@
+require './textColors.rb'
+
 module Computer
   def self.rand_code()
     code = String.new
@@ -14,8 +16,9 @@ module Play
   @@clue = String.new
   @@color_guess = String.new
   @@broken = false
+  @@random_n = ""
 
-  @@last_guess = []
+  @@last_guess = ["","","",""]
   @@secret_code = []
 
   def last_guess()
@@ -90,7 +93,10 @@ module Play
     for i in 1..12 do
       puts "Type in 4 numbers (1-6) as your guess."
       Codebreaker.guess(gets.chomp)
-      if @@last_guess.any? {|n| n.to_i < 1 || n.to_i > 9 || /\D/.match?(n)}
+      if @@last_guess.any? {|n| n.to_i < 1 || n.to_i > 6 || /\D/.match?(n)}
+        redo
+      end
+      if @@last_guess.length > 4
         redo
       end
       puts play_round(@@last_guess, @@secret_code)
@@ -98,6 +104,52 @@ module Play
         break
       end
     end
+  end
+
+  def rand_code()
+    code = String.new
+    4.times do
+      code += Random.new.rand(1..6).to_s
+    end
+    return code
+  end
+
+  def game_loop_com()
+    puts "The computer will begin to guess."
+    for i in 1..12 do
+      sleep(2)
+      Codebreaker.guess(rand_guess())
+      puts play_round(@@last_guess, @@secret_code)
+      analyze_g(@@last_guess, @@secret_code)
+      if exact?(@@last_guess, @@secret_code)
+        break
+      end
+    end
+    puts "The computer couldn't guess the secret code! Great job!"
+  end
+
+  def rand_guess()
+    @@last_guess.each_index do |num|
+      if @@last_guess[num] == ""
+        random_num()
+        @@last_guess[num] = @@random_n
+      end
+    end
+    return @@last_guess
+  end
+  
+  def analyze_g(guess,code)
+    guess.each_index do |i|
+      if guess[i] == code[i]
+        next
+      else
+        guess[i] = ""
+      end
+    end
+  end
+
+  def random_num()
+    @@random_n = Random.new.rand(1..6).to_s
   end
 
 end
@@ -110,7 +162,11 @@ class Codebreaker
   end
 
   def self.guess(code)
-    @@last_guess = code.split("")
+    unless code.is_a? Array
+      @@last_guess = code.split("")
+    else 
+      @@last_guess = code
+    end
   end
 end
 
@@ -126,75 +182,40 @@ class Codemaker
   end
 end
 
-class String
-  def red
-    "\e[0;31m#{self}\e[0m"
-  end
-
-  def green
-    "\e[0;32m#{self}\e[0m"
-  end
-
-  def yellow
-    "\e[0;33m#{self}\e[0m"
-  end
-
-  def blue
-    "\e[0;34m#{self}\e[0m"
-  end
-
-  def purple
-    "\e[0;35m#{self}\e[0m"
-  end
-
-  def cyan
-    "\e[0;36m#{self}\e[0m"
-  end
-
-  def redbg
-    "\e[0;41m#{self}\e[0m"
-  end
-
-  def greenbg
-    "\e[0;42m#{self}\e[0m"
-  end
-
-  def yellowbg
-    "\e[0;43m#{self}\e[0m"
-  end
-
-  def bluebg
-    "\e[0;44m#{self}\e[0m"
-  end
-
-  def purplebg
-    "\e[0;45m#{self}\e[0m"
-  end
-
-  def cyanbg
-    "\e[0;46m#{self}\e[0m"
-  end
-
-end
-
-module TextFormating
-  @@CIRCLE = "\u25CF"
-
-  def self.correct()
-    return @@CIRCLE.green
-  end
-
-  def self.wrong()
-    return @@CIRCLE.yellow
-  end
-end
-
 $code_breaker = Codebreaker.new()
 $code_maker = Codemaker.new()
 
 
-Codemaker.create_code(Computer.rand_code())
-Play.game_loop_hum
-puts "The secret code was " + Play.secret_code().join("") + "!"
+puts "Would you like to be the Codemaker or Codebreaker?\n[1] Codemaker\n[2] Codebreaker"
+loop do
+  answer = gets.chomp
+  if answer == "1"
+    puts "You chose [1] Codemaker!\n What would you like your secret code to be? it has to be 4 numbers (1-6)."
+    loop do
+      secret_code = gets.chomp
+      Codemaker.create_code(secret_code)
+      if Play.secret_code().any? {|n| n.to_i < 1 || n.to_i > 6 || /\D/.match?(n)}
+        puts "The secret code can only contain numbers that are 1-6. Please try again."
+        redo
+      elsif Play.secret_code().length > 4 || Play.secret_code().length < 4
+        puts "The secret code has to be 4 numbers. Please try again."
+        redo
+      else
+        Play.game_loop_com
+        break
+      end
+    end
+  elsif answer == "2"
+    Codemaker.create_code(Play.rand_code())
+    Play.game_loop_hum
+    puts "The secret code was " + Play.secret_code().join("") + "!"
+    break 
+  else
+    puts "You have to pick either 1 or 2!"
+    redo
+  end
+  break
+end
+
 
 
