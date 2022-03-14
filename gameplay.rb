@@ -64,7 +64,6 @@ module Play
 
   def exact?(guess,code)
     if guess.eql?(code)
-      puts "The secret code has been guessed!"
       return true
     else 
       return false
@@ -102,10 +101,13 @@ module Play
       puts play_round(@@last_guess, @@secret_code)
       analyze_g(@@last_guess, @@secret_code)
       if exact?(@@last_guess, @@secret_code)
+        puts "The secret code has been guessed!"
         break
       end
     end
-    puts "The computer couldn't guess the secret code! Great job!"
+    if !exact?(@@last_guess, @@secret_code)
+      puts "The computer couldn't guess the secret code! Great job!"
+    end
   end
 
   
